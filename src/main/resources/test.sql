@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS users (`id` int NOT NULL AUTO_INCREMENT, `name` varchar(45) NOT NULL,`last_name` varchar(45) NOT NULL, `age` int DEFAULT NULL, PRIMARY KEY (`id`))
