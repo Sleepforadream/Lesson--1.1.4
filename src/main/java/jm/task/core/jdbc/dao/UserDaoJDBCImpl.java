@@ -9,6 +9,8 @@ import java.util.List;
 
 public class UserDaoJDBCImpl implements UserDao {
 
+    private final String sqlCheck = "SELECT * FROM USERS";
+
     public UserDaoJDBCImpl() {
     }
 
@@ -16,7 +18,6 @@ public class UserDaoJDBCImpl implements UserDao {
         String sqlCreate = "CREATE TABLE IF NOT EXISTS USERS (`id` int NOT NULL AUTO_INCREMENT," +
                 " `name` varchar(45) NOT NULL,`last_name` varchar(45) NOT NULL," +
                 " `age` int DEFAULT NULL, PRIMARY KEY (`id`))";
-        String sqlCheck = "SELECT * FROM USERS";
         try (Connection connection = Util.getConnection();
              PreparedStatement checkStatement = connection.prepareStatement(sqlCheck);
              PreparedStatement createStatement = connection.prepareStatement(sqlCreate)) {
@@ -35,7 +36,6 @@ public class UserDaoJDBCImpl implements UserDao {
 
     public void dropUsersTable() {
         String sqlDrop = "DROP TABLE IF EXISTS USERS";
-        String sqlCheck = "SELECT * FROM USERS";
         try (Connection connection = Util.getConnection();
              PreparedStatement checkStatement = connection.prepareStatement(sqlCheck);
              PreparedStatement dropStatement = connection.prepareStatement(sqlDrop)) {
@@ -117,7 +117,6 @@ public class UserDaoJDBCImpl implements UserDao {
 
     public void cleanUsersTable() {
         String sqlClean = "DELETE FROM USERS";
-        String sqlCheck = "SELECT COUNT(ID) FROM USERS";
         try (Connection connection = Util.getConnection();
              PreparedStatement checkStatement = connection.prepareStatement(sqlCheck);
              PreparedStatement cleanStatement = connection.prepareStatement(sqlClean);
