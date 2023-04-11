@@ -13,14 +13,16 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void createUsersTable() {
-        String sqlCreate = "CREATE TABLE IF NOT EXISTS USERS (`id` int NOT NULL AUTO_INCREMENT, `name` varchar(45) NOT NULL,`last_name` varchar(45) NOT NULL, `age` int DEFAULT NULL, PRIMARY KEY (`id`))";
+        String sqlCreate = "CREATE TABLE IF NOT EXISTS USERS (`id` int NOT NULL AUTO_INCREMENT," +
+                " `name` varchar(45) NOT NULL,`last_name` varchar(45) NOT NULL," +
+                " `age` int DEFAULT NULL, PRIMARY KEY (`id`))";
         String sqlCheck = "SELECT * FROM USERS";
         try (Connection connection = Util.getConnection();
              PreparedStatement checkStatement = connection.prepareStatement(sqlCheck);
              PreparedStatement createStatement = connection.prepareStatement(sqlCreate)) {
             try {
                 checkStatement.executeQuery();
-                System.err.println("Такая таблица уже есть в бд");
+                System.out.println("Такая таблица уже есть в бд");
             } catch (SQLException e) {
                 createStatement.execute();
                 System.out.println("Таблица 'users' создана");
@@ -45,6 +47,7 @@ public class UserDaoJDBCImpl implements UserDao {
                 System.err.println("Таблица 'USERS' не найдена");
             }
         } catch (SQLException e) {
+            System.err.println("Ошибка удаления таблицы 'users'!");
             e.printStackTrace();
         }
     }
@@ -57,10 +60,11 @@ public class UserDaoJDBCImpl implements UserDao {
             editStatement.setString(2, lastName);
             editStatement.setByte(3, age);
             editStatement.executeUpdate();
+            connection.commit();
             System.out.println("Пользователь с именем - " + name + " добавлен в базу данных");
         } catch (SQLException e) {
             System.err.println("Пользователь с именем - " + name + " не был добавлен в базу данных");
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
     }
 
@@ -74,8 +78,10 @@ public class UserDaoJDBCImpl implements UserDao {
             if (resultSet.next()) {
                 String nameUser = resultSet.getString("NAME");
                 deleteStatement.executeUpdate();
+                connection.commit();
                 System.out.println("Пользователь " + nameUser + " был удалён из базы данных");
             } else {
+                connection.rollback();
                 System.err.println("Пользователя с таким ID нет в базе данных");
             }
         } catch (SQLException e) {
@@ -86,10 +92,10 @@ public class UserDaoJDBCImpl implements UserDao {
 
     public List<User> getAllUsers() {
         List<User> userList = new ArrayList<>();
+        String sqlSelect = "SELECT ID, NAME, LAST_NAME, AGE FROM USERS";
         try (Connection connection = Util.getConnection();
-             Statement selectAllStatement = connection.createStatement()) {
-            String sqlSelect = "SELECT ID, NAME, LAST_NAME, AGE FROM USERS";
-            ResultSet resultSet = selectAllStatement.executeQuery(sqlSelect);
+             Statement selectAllStatement = connection.createStatement();
+             ResultSet resultSet = selectAllStatement.executeQuery(sqlSelect)) {
             while (resultSet.next()) {
                 User user = new User();
                 user.setId(resultSet.getLong("ID"));
@@ -98,8 +104,13 @@ public class UserDaoJDBCImpl implements UserDao {
                 user.setAge(resultSet.getByte("AGE"));
                 userList.add(user);
             }
+            if (userList.isEmpty()) {
+                System.err.println("Список пользователей пуст");
+                return userList;
+            }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.err.println("Ошибка получения списка пользователей");
+            e.printStackTrace();
         }
         return userList;
     }
@@ -114,8 +125,10 @@ public class UserDaoJDBCImpl implements UserDao {
             resultSet.next();
             if (Integer.parseInt(resultSet.getString(1)) > 0) {
                 cleanStatement.execute();
+                connection.commit();
                 System.out.println("Таблица очищена");
             } else {
+                connection.rollback();
                 System.err.println("Таблица уже пустая");
             }
         } catch (SQLException e) {
