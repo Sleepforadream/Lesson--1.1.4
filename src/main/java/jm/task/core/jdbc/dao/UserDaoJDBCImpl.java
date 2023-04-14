@@ -54,16 +54,21 @@ public class UserDaoJDBCImpl implements UserDao {
 
     public void saveUser(String name, String lastName, byte age) {
         String sqlEdit = "INSERT INTO USERS (NAME, LAST_NAME, AGE) VALUES (?, ? ,?)";
-        try (Connection connection = Util.getConnection();
-             PreparedStatement editStatement = connection.prepareStatement(sqlEdit)) {
-            editStatement.setString(1, name);
-            editStatement.setString(2, lastName);
-            editStatement.setByte(3, age);
-            editStatement.executeUpdate();
-            connection.commit();
-            System.out.println("Пользователь с именем - " + name + " добавлен в базу данных");
+        try (Connection connection = Util.getConnection()) {
+            try (PreparedStatement editStatement = connection.prepareStatement(sqlEdit)) {
+                editStatement.setString(1, name);
+                editStatement.setString(2, lastName);
+                editStatement.setByte(3, age);
+                editStatement.executeUpdate();
+                connection.commit();
+                System.out.println("Пользователь с именем - " + name + " добавлен в базу данных");
+            } catch (SQLException e) {
+                connection.rollback();
+                System.out.println("Пользователь с именем - " + name + " не был добавлен в базу данных");
+                e.printStackTrace();
+            }
         } catch (SQLException e) {
-            System.err.println("Пользователь с именем - " + name + " не был добавлен в базу данных");
+            System.err.println("Произошла ошибка соединения");
             e.printStackTrace();
         }
     }
