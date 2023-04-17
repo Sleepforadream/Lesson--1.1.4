@@ -7,20 +7,18 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UserDaoJDBCImpl implements UserDao {
+import static jm.task.core.jdbc.util.Util.CREATE_TABLE_USERS_SQL;
+import static jm.task.core.jdbc.util.Util.CHECK_GET_USERS_SQL;
 
-    private final String sqlCheck = "SELECT * FROM USERS";
+public class UserDaoJDBCImpl implements UserDao {
 
     public UserDaoJDBCImpl() {
     }
 
     public void createUsersTable() {
-        String sqlCreate = "CREATE TABLE IF NOT EXISTS USERS (`id` int NOT NULL AUTO_INCREMENT," +
-                " `name` varchar(45) NOT NULL,`last_name` varchar(45) NOT NULL," +
-                " `age` int DEFAULT NULL, PRIMARY KEY (`id`))";
         try (Connection connection = Util.getConnection();
-             PreparedStatement checkStatement = connection.prepareStatement(sqlCheck);
-             PreparedStatement createStatement = connection.prepareStatement(sqlCreate)) {
+             PreparedStatement checkStatement = connection.prepareStatement(CHECK_GET_USERS_SQL);
+             PreparedStatement createStatement = connection.prepareStatement(CREATE_TABLE_USERS_SQL)) {
             try {
                 checkStatement.executeQuery();
                 System.out.println("Такая таблица уже есть в бд");
@@ -37,7 +35,7 @@ public class UserDaoJDBCImpl implements UserDao {
     public void dropUsersTable() {
         String sqlDrop = "DROP TABLE IF EXISTS USERS";
         try (Connection connection = Util.getConnection();
-             PreparedStatement checkStatement = connection.prepareStatement(sqlCheck);
+             PreparedStatement checkStatement = connection.prepareStatement(CHECK_GET_USERS_SQL);
              PreparedStatement dropStatement = connection.prepareStatement(sqlDrop)) {
             try {
                 checkStatement.executeQuery();
@@ -97,10 +95,9 @@ public class UserDaoJDBCImpl implements UserDao {
 
     public List<User> getAllUsers() {
         List<User> userList = new ArrayList<>();
-        String sqlSelect = "SELECT ID, NAME, LAST_NAME, AGE FROM USERS";
         try (Connection connection = Util.getConnection();
              Statement selectAllStatement = connection.createStatement();
-             ResultSet resultSet = selectAllStatement.executeQuery(sqlSelect)) {
+             ResultSet resultSet = selectAllStatement.executeQuery(CHECK_GET_USERS_SQL)) {
             while (resultSet.next()) {
                 User user = new User();
                 user.setId(resultSet.getLong("ID"));
@@ -123,7 +120,7 @@ public class UserDaoJDBCImpl implements UserDao {
     public void cleanUsersTable() {
         String sqlClean = "DELETE FROM USERS";
         try (Connection connection = Util.getConnection();
-             PreparedStatement checkStatement = connection.prepareStatement(sqlCheck);
+             PreparedStatement checkStatement = connection.prepareStatement(CHECK_GET_USERS_SQL);
              PreparedStatement cleanStatement = connection.prepareStatement(sqlClean);
              ResultSet resultSet = checkStatement.executeQuery()) {
             resultSet.next();
