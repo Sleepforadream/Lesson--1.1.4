@@ -24,7 +24,7 @@ public class Main {
 //        service.cleanUsersTable();
 //        service.dropUsersTable();
 //
-//        service.createUsersTable();
+        service.createUsersTable();
 //        service.saveUser("Max", "Tsarev",(byte) 29);
 //        service.saveUser("Vladislava", "Kolpakova",(byte) 22);
 //        service.saveUser("Vladimir", "Dolgushin",(byte) 29);

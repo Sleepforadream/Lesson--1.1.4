@@ -9,6 +9,8 @@ import org.hibernate.Transaction;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static jm.task.core.jdbc.dao.UserDaoHibernateImpl.ObjectEntity.TABLE;
 import static jm.task.core.jdbc.dao.UserDaoHibernateImpl.ObjectEntity.USER;
@@ -17,18 +19,7 @@ import static jm.task.core.jdbc.util.Util.CHECK_GET_USERS_SQL;
 
 public class UserDaoHibernateImpl implements UserDao {
 
-    public UserDaoHibernateImpl() {}
-
-    enum ObjectEntity {
-        USER("Пользователь с именем - ", null),
-        TABLE("Таблица с именем - ", "Users");
-        private final String title;
-        private final String name;
-
-        ObjectEntity(String title, String name) {
-            this.title = title;
-            this.name = name;
-        }
+    public UserDaoHibernateImpl() {
     }
 
     @Override
@@ -70,7 +61,7 @@ public class UserDaoHibernateImpl implements UserDao {
     public void removeUserById(long id) {
         doTransaction(session -> {
             User user = session.get(User.class, id);
-            if(user == null) {
+            if (user == null) {
                 throw new RuntimeException("Такого пользователя не существует");
             }
             session.delete(user);
@@ -107,23 +98,26 @@ public class UserDaoHibernateImpl implements UserDao {
                 transaction.commit();
                 System.out.println(objectEntity.title + name + successMessage);
             } catch (Exception exception) {
-                printCRUDError(exception, transaction, objectEntity.title + successMessage);
+                transaction.rollback();
+                successMessage = (objectEntity.title + successMessage).replace(" с именем - ", "");
+                System.out.println(successMessage.replaceAll("(?i)\\sбы(л[аио])?\\s"," не бы$1 "));
+                exception.printStackTrace();
             }
         } catch (HibernateException exception) {
-            printSessionError(exception);
+            System.err.println("Ошибка создания сессии");
+            exception.printStackTrace();
         }
     }
 
-    private void printSessionError(HibernateException exception) {
-        System.err.println("Ошибка создания сессии");
-        exception.printStackTrace();
-    }
+    enum ObjectEntity {
+        USER("Пользователь с именем - ", null),
+        TABLE("Таблица с именем - ", "Users");
+        private final String title;
+        private final String name;
 
-    private void printCRUDError(Exception exception, Transaction transaction, String message) {
-        transaction.rollback();
-        message = message.replace(" с именем - ", "");
-        if (message.contains(" был ") || message.contains(" была ") || message.contains(" были "))
-            System.err.println(message.replace(" был", " не был"));
-        exception.printStackTrace();
+        ObjectEntity(String title, String name) {
+            this.title = title;
+            this.name = name;
+        }
     }
 }
